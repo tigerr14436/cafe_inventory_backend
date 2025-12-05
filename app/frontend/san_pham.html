@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quản lý sản phẩm</title>
+    <link rel="stylesheet" href="style/style.css" />
+</head>
+
+<body>
+    <div class="container">
+        <h2>Danh sách sản phẩm</h2>
+        <button class="btn btn-primary" onclick="openAddModal()">+ Thêm sản phẩm</button>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>SKU</th>
+                    <th>Tên sản phẩm</th>
+                    <th>Danh mục</th>
+                    <th>Đơn vị</th>
+                    <th>Tồn kho</th>
+                    <th>Giá nhập</th>
+                    <th>Giá bán</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody id="product-table-body"></tbody>
+        </table>
+    </div>
+
+    <!-- Modal Thêm -->
+    <div id="addModal" class="modal">
+        <div class="modal-content">
+            <h3>Thêm sản phẩm</h3>
+            <input id="sku" placeholder="SKU">
+            <input id="name" placeholder="Tên sản phẩm">
+            <input id="category" placeholder="Danh mục">
+            <input id="unit" placeholder="Đơn vị">
+            <input id="import_price" placeholder="Giá nhập" type="number">
+            <input id="sell_price" placeholder="Giá bán" type="number">
+            <input id="stock" placeholder="Tồn kho ban đầu" type="number">
+            <input id="min_stock" placeholder="Ngưỡng cảnh báo" type="number">
+            <textarea id="description" placeholder="Mô tả"></textarea>
+
+            <button class="btn btn-success" onclick="addProduct()">Lưu</button>
+            <button class="btn btn-secondary" onclick="closeAddModal()">Hủy</button>
+        </div>
+    </div>
+
+    <!-- Modal Sửa -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <h3>Chỉnh sửa sản phẩm</h3>
+
+            <input id="edit_id" type="hidden">
+            <input id="edit_sku" placeholder="SKU">
+            <input id="edit_name" placeholder="Tên sản phẩm">
+            <input id="edit_category" placeholder="Danh mục">
+            <input id="edit_unit" placeholder="Đơn vị">
+            <input id="edit_import_price" placeholder="Giá nhập" type="number">
+            <input id="edit_sell_price" placeholder="Giá bán" type="number">
+            <input id="edit_stock" placeholder="Tồn kho" type="number">
+            <input id="edit_min_stock" placeholder="Ngưỡng cảnh báo" type="number">
+            <textarea id="edit_description" placeholder="Mô tả"></textarea>
+
+            <button class="btn btn-success" onclick="updateProduct()">Cập nhật</button>
+            <button class="btn btn-secondary" onclick="closeEditModal()">Hủy</button>
+        </div>
+    </div>
+<script>
+const API = "http://127.0.0.1:8000/products";
+
+async function loadProducts() {
+    const res = await fetch(API);
+    const list = await res.json();
+    const tbody = document.getElementById("product-table-body");
+    tbody.innerHTML = "";
+
+    list.forEach((p, i) => {
+        tbody.innerHTML += `
+            <tr>
+                <td>${i + 1}</td>
+                <td>${p.sku || ""}</td>
+                <td>${p.name}</td>
+                <td>${p.category || ""}</td>
+                <td>${p.unit}</td>
+                <td>${p.stock ?? 0}</td>
+                <td>${p.import_price ?? 0}</td>
+                <td>${p.sell_price ?? 0}</td>
+                <td>
+                    <button class="btn btn-warning" onclick="openEditModal(${p.id})">Sửa</button>
+                    <button class="btn btn-danger" onclick="deleteProduct(${p.id})">Xóa</button>
+                </td>
+            </tr>
+        `;
+    });
+}
+
+// ---------- ADD ----------
+function openAddModal() {
+    document.getElementById("addModal").style.display = "block";
+}
+function closeAddModal() {
+    document.getElementById("addModal").style.display = "none";
+}
+
+async function addProduct() {
+    const data = {
+        sku: sku.value,
+        name: name.value,
+        category: category.value,
+        unit: unit.value,
+        import_price: Number(import_price.value),
+        sell_price: Number(sell_price.value),
+        stock: Number(stock.value),
+        min_stock: Number(min_stock.value),
+        description: description.value
+    };
+
+    const res = await fetch(API, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(data)
+    });
+
+    if (res.ok) {
+        alert("Thêm thành công!");
+        closeAddModal();
+        loadProducts();
+    } else {
+        alert("Lỗi khi thêm!");
+    }
+}
+
+// ---------- EDIT ----------
+async function openEditModal(id) {
+    const res = await fetch(`${API}/${id}`);
+    const p = await res.json();
+
+    edit_id.value = p.id;
+    edit_sku.value = p.sku;
+    edit_name.value = p.name;
+    edit_category.value = p.category;
+    edit_unit.value = p.unit;
+    edit_import_price.value = p.import_price;
+    edit_sell_price.value = p.sell_price;
+    edit_stock.value = p.stock;
+    edit_min_stock.value = p.min_stock;
+    edit_description.value = p.description;
+
+    document.getElementById("editModal").style.display = "block";
+}
+function closeEditModal() {
+    document.getElementById("editModal").style.display = "none";
+}
+
+async function updateProduct() {
+    const id = edit_id.value;
+
+    const data = {
+        sku: edit_sku.value,
+        name: edit_name.value,
+        category: edit_category.value,
+        unit: edit_unit.value,
+        import_price: Number(edit_import_price.value),
+        sell_price: Number(edit_sell_price.value),
+        stock: Number(edit_stock.value),
+        min_stock: Number(edit_min_stock.value),
+        description: edit_description.value
+    };
+
+    const res = await fetch(`${API}/${id}`, {
+        method: "PUT",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(data)
+    });
+
+    if (res.ok) {
+        alert("Cập nhật thành công!");
+        closeEditModal();
+        loadProducts();
+    } else {
+        alert("Lỗi khi cập nhật!");
+    }
+}
+
+// ---------- DELETE ----------
+async function deleteProduct(id) {
+    if (!confirm("Bạn có chắc muốn xóa?")) return;
+
+    const res = await fetch(`${API}/${id}`, { method: "DELETE" });
+
+    if (res.ok) {
+        alert("Đã xóa!");
+        loadProducts();
+    } else {
+        alert("Xóa thất bại!");
+    }
+}
+
+// Load khi mở page
+window.onload = loadProducts;
+</script>
+</body>
+</html>

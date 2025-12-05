@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html class="light" lang="vi">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Trang tổng quan</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+<!-- FONT -->
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+
+<script>
+tailwind.config = {
+    darkMode: "class",
+    theme: {
+        extend: {
+            colors: {
+                primary: "#4A2C2A",
+                "background-light": "#F4F6F8",
+                "background-dark": "#101010",
+                "card-light": "#FFFFFF",
+                "card-dark": "#1C1C1C",
+                "text-light-primary": "#212121",
+                "text-dark-primary": "#FFFFFF",
+                "text-light-secondary": "#616161",
+                "text-dark-secondary": "#AFAFAF",
+                "border-light": "#E0E0E0",
+                "border-dark": "#333333",
+                accent: "#FFAB40",
+                warning: "#FFC107",
+                danger: "#D32F2F",
+                import: "#2196F3",
+                export: "#FF9800",
+                inventory: "#4CAF50"
+            },
+            fontFamily: {
+                display: ["Work Sans", "sans-serif"]
+            }
+        }
+    }
+}
+</script>
+
+<style>
+.material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+</style>
+
+</head>
+
+<body class="font-display bg-background-light dark:bg-background-dark">
+
+<!-- WRAPPER -->
+<div class="flex min-h-screen w-full flex-col">
+
+<div class="flex flex-1">
+
+<!-- SIDEBAR -->
+<aside class="sticky top-0 flex h-screen w-64 flex-col bg-card-light dark:bg-card-dark border-r border-border-light dark:border-border-dark">
+    <div class="flex h-full flex-col justify-between p-4">
+
+        <div class="flex flex-col gap-4">
+            <div class="flex items-center gap-3 p-2">
+                <div class="rounded-full size-12 bg-cover bg-center" 
+                     style='background-image: url("https://i.imgur.com/8Km9tLL.png");'></div>
+                <div>
+                    <h1 class="text-text-light-primary dark:text-text-dark-primary text-base font-bold">The Coffee House</h1>
+                    <p class="text-text-light-secondary dark:text-text-dark-secondary text-sm">Quản lý kho</p>
+                </div>
+            </div>
+
+            <nav class="flex flex-col gap-2 mt-4">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 dark:bg-primary/20" href="#">
+                    <span class="material-symbols-outlined text-primary text-2xl">dashboard</span>
+                    <p class="text-primary text-sm font-bold">Tổng quan</p>
+                </a>
+
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800" 
+                   href="san_pham.html">
+                    <span class="material-symbols-outlined text-text-light-secondary dark:text-text-dark-secondary text-2xl">inventory_2</span>
+                    <p class="text-text-light-primary dark:text-text-dark-primary text-sm">Quản lý sản phẩm</p>
+                </a>
+            </nav>
+        </div>
+
+        <div>
+            <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800" href="#">
+                <span class="material-symbols-outlined text-text-light-secondary dark:text-text-dark-secondary text-2xl">logout</span>
+                <p class="text-text-light-primary dark:text-text-dark-primary text-sm">Đăng xuất</p>
+            </a>
+        </div>
+
+    </div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="flex-1 p-8 overflow-y-auto">
+<div class="max-w-7xl mx-auto">
+
+<!-- HEADER -->
+<header class="mb-8">
+    <h1 class="text-text-light-primary dark:text-text-dark-primary text-3xl font-bold">Trang tổng quan</h1>
+    <p class="text-text-light-secondary dark:text-text-dark-secondary mt-1">
+        Chào mừng trở lại, đây là tình hình kho hàng hôm nay.
+    </p>
+</header>
+
+<!-- KPI CARDS -->
+<section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+
+    <div class="p-6 rounded-lg bg-card-light dark:bg-card-dark border border-border-light dark:border-border-dark">
+        <p class="text-text-light-secondary dark:text-text-dark-secondary text-sm">Tổng sản phẩm</p>
+        <p id="total_products" class="text-text-light-primary dark:text-text-dark-primary text-3xl font-bold">0</p>
+    </div>
+
+    <div class="p-6 rounded-lg bg-card-light dark:bg-card-dark border border-border-light dark:border-border-dark">
+        <p class="text-text-light-secondary dark:text-text-dark-secondary text-sm">Tổng giá trị kho</p>
+        <p id="total_stock_value" class="text-text-light-primary dark:text-text-dark-primary text-3xl font-bold">0</p>
+    </div>
+
+    <div class="p-6 rounded-lg bg-card-light dark:bg-card-dark border border-border-light dark:border-border-dark">
+        <p class="text-text-light-secondary dark:text-text-dark-secondary text-sm">Tồn kho thấp</p>
+        <p id="low_stock" class="text-warning text-3xl font-bold">0</p>
+    </div>
+
+    <div class="p-6 rounded-lg bg-card-light dark:bg-card-dark border border-border-light dark:border-border-dark">
+        <p class="text-text-light-secondary dark:text-text-dark-secondary text-sm">Sản phẩm sắp hết hạn</p>
+        <p class="text-danger text-3xl font-bold">8</p>
+    </div>
+
+</section>
+
+</div>
+</main>
+
+</div>
+</div>
+
+<!-- ===========================
+      FETCH API DASHBOARD DATA
+=============================== -->
+<script>
+async function loadDashboard() {
+    try {
+        const res = await fetch("http://127.0.0.1:8000/dashboard/summary");
+        const data = await res.json();
+
+        document.getElementById("total_products").innerText = data.total_products;
+        document.getElementById("total_stock_value").innerText = data.total_stock_value.toLocaleString("vi-VN") + " đ";
+        document.getElementById("low_stock").innerText = data.low_stock;
+
+    } catch (err) {
+        console.error("Lỗi tải dữ liệu dashboard:", err);
+    }
+}
+
+loadDashboard();
+</script>
+
+</body>
+</html>

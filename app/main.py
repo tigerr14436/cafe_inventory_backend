@@ -1,29 +1,24 @@
-from fastapi import FastAPI, Depends
-from sqlalchemy.orm import Session
-from sqlalchemy import text
-from .database import SessionLocal, engine, Base
-from . import models
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from app.database import Base, engine
+from app.routers import products, dashboard
 
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+# CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(products.router, prefix="/products", tags=["Products"])
+app.include_router(dashboard.router, tags=["Dashboard"])
 
 @app.get("/")
 def home():
     return {"message": "FastAPI + PostgreSQL OK!"}
-
-@app.get("/test-db")
-def test_db(db: Session = Depends(get_db)):
-    try:
-        db.execute(text("SELECT 1"))
-        return {"status": "DB connected OK!"}
-    except Exception as e:
-        return {"status": "DB error", "detail": str(e)}
-
