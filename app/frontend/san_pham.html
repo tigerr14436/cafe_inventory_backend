@@ -1,207 +1,384 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html class="light" lang="vi">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Quản lý sản phẩm</title>
-    <link rel="stylesheet" href="style/style.css" />
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Quản lý Sản phẩm</title>
+
+<!-- TailwindCSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+<!-- Font -->
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+
+<style>
+.material-symbols-outlined {
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+
+/* Modal */
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(2px);
+  justify-content: center;
+  align-items: center;
+}
+.modal-content {
+  background: white;
+  width: 450px;
+  max-width: 95%;
+  padding: 20px;
+  border-radius: 12px;
+}
+.modal input, .modal textarea {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+}
+</style>
+
+<script id="tailwind-config">
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        primary: "#5bec13",
+        "background-light": "#f6f8f6",
+        "background-dark": "#162210",
+      },
+      fontFamily: { display: ["Work Sans"] }
+    }
+  }
+}
+</script>
 </head>
 
-<body>
-    <div class="container">
-        <h2>Danh sách sản phẩm</h2>
-        <button class="btn btn-primary" onclick="openAddModal()">+ Thêm sản phẩm</button>
+<body class="bg-background-light font-display">
 
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>SKU</th>
-                    <th>Tên sản phẩm</th>
-                    <th>Danh mục</th>
-                    <th>Đơn vị</th>
-                    <th>Tồn kho</th>
-                    <th>Giá nhập</th>
-                    <th>Giá bán</th>
-                    <th>Hành động</th>
-                </tr>
-            </thead>
-            <tbody id="product-table-body"></tbody>
-        </table>
+<div class="flex h-screen">
+
+<!-- ================= SIDEBAR ================ -->
+<aside class="w-64 bg-white border-r">
+  <div class="p-4">
+    <div class="flex items-center gap-3">
+      <div class="size-10 rounded-full bg-cover"
+        style='background-image:url("https://i.imgur.com/8Km9tLL.png")'></div>
+      <div>
+        <h1 class="font-semibold">Cafe A.</h1>
+        <p class="text-sm text-gray-600">Hệ thống quản lý</p>
+      </div>
     </div>
 
-    <!-- Modal Thêm -->
-    <div id="addModal" class="modal">
-        <div class="modal-content">
-            <h3>Thêm sản phẩm</h3>
-            <input id="sku" placeholder="SKU">
-            <input id="name" placeholder="Tên sản phẩm">
-            <input id="category" placeholder="Danh mục">
-            <input id="unit" placeholder="Đơn vị">
-            <input id="import_price" placeholder="Giá nhập" type="number">
-            <input id="sell_price" placeholder="Giá bán" type="number">
-            <input id="stock" placeholder="Tồn kho ban đầu" type="number">
-            <input id="min_stock" placeholder="Ngưỡng cảnh báo" type="number">
-            <textarea id="description" placeholder="Mô tả"></textarea>
+    <nav class="mt-6 flex flex-col gap-2">
+      <a href="index.html" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-200">
+        <span class="material-symbols-outlined">dashboard</span> Tổng quan
+      </a>
 
-            <button class="btn btn-success" onclick="addProduct()">Lưu</button>
-            <button class="btn btn-secondary" onclick="closeAddModal()">Hủy</button>
+      <a class="flex items-center gap-3 px-3 py-2 rounded bg-primary/30">
+        <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1">coffee</span> Sản phẩm
+      </a>
+    </nav>
+  </div>
+</aside>
+
+<!-- ================= MAIN CONTENT ================ -->
+<main class="flex-1 p-6 overflow-y-auto">
+  <div class="max-w-7xl mx-auto">
+
+    <h1 class="text-4xl font-black mb-6">Quản lý Sản phẩm</h1>
+
+    <!-- Search + Filter + Add -->
+    <div class="flex flex-col md:flex-row justify-between gap-4 p-4 bg-white rounded shadow">
+
+      <!-- Search -->
+      <div class="flex-1">
+        <div class="flex items-center bg-gray-100 rounded h-12 px-3">
+          <span class="material-symbols-outlined text-gray-500">search</span>
+          <input id="searchInput"
+                 oninput="applyFilters()"
+                 class="flex-1 bg-transparent px-3 outline-none"
+                 placeholder="Tìm theo tên hoặc SKU..."/>
         </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <!-- Category Filter -->
+        <select id="categoryFilter"
+                onchange="applyFilters()"
+                class="h-12 px-3 rounded bg-gray-100">
+          <option value="">Lọc theo nhóm</option>
+          <option>Hạt cà phê</option>
+          <option>Bột cacao</option>
+          <option>Syrup</option>
+          <option>Nguyên liệu</option>
+          <option>Trà</option>
+          <option>Khác</option>
+        </select>
+
+        <!-- Add Product -->
+        <button onclick="openAddModal()"
+          class="flex items-center bg-primary px-4 h-12 rounded font-bold gap-2">
+          <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1">add</span>
+          Thêm sản phẩm
+        </button>
+      </div>
     </div>
 
-    <!-- Modal Sửa -->
-    <div id="editModal" class="modal">
-        <div class="modal-content">
-            <h3>Chỉnh sửa sản phẩm</h3>
+    <!-- ================= TABLE ================= -->
+    <div class="bg-white rounded shadow mt-4 overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-100 text-gray-700 text-xs uppercase">
+          <tr>
+            <th class="px-6 py-3">Tên sản phẩm</th>
+            <th class="px-6 py-3">SKU</th>
+            <th class="px-6 py-3">Đơn vị</th>
+            <th class="px-6 py-3">Nhóm</th>
+            <th class="px-6 py-3">Giá nhập / Giá bán</th>
+            <th class="px-6 py-3 text-center">Tồn kho</th>
+            <th class="px-6 py-3 text-center">Cảnh báo</th>
+            <th class="px-6 py-3 text-right">Hành động</th>
+          </tr>
+        </thead>
 
-            <input id="edit_id" type="hidden">
-            <input id="edit_sku" placeholder="SKU">
-            <input id="edit_name" placeholder="Tên sản phẩm">
-            <input id="edit_category" placeholder="Danh mục">
-            <input id="edit_unit" placeholder="Đơn vị">
-            <input id="edit_import_price" placeholder="Giá nhập" type="number">
-            <input id="edit_sell_price" placeholder="Giá bán" type="number">
-            <input id="edit_stock" placeholder="Tồn kho" type="number">
-            <input id="edit_min_stock" placeholder="Ngưỡng cảnh báo" type="number">
-            <textarea id="edit_description" placeholder="Mô tả"></textarea>
+        <tbody id="productTableBody"></tbody>
 
-            <button class="btn btn-success" onclick="updateProduct()">Cập nhật</button>
-            <button class="btn btn-secondary" onclick="closeEditModal()">Hủy</button>
-        </div>
+      </table>
     </div>
+
+  </div>
+</main>
+
+</div>
+
+
+<!-- ========================= MODAL THÊM SẢN PHẨM ========================= -->
+<div id="addModal" class="modal">
+    <div class="modal-content">
+
+        <h2 class="font-bold text-xl mb-3">Thêm sản phẩm</h2>
+
+        <input id="add_name" placeholder="Tên sản phẩm">
+        <input id="add_sku" placeholder="Mã SKU">
+        <input id="add_unit" placeholder="Đơn vị">
+        <input id="add_category" placeholder="Nhóm sản phẩm">
+
+        <input id="add_import" type="number" placeholder="Giá nhập">
+        <input id="add_sell" type="number" placeholder="Giá bán">
+
+        <input id="add_stock" type="number" placeholder="Tồn kho">
+        <input id="add_min" type="number" placeholder="Ngưỡng cảnh báo">
+
+        <textarea id="add_desc" placeholder="Mô tả"></textarea>
+
+        <button onclick="createProduct()" class="bg-primary px-4 py-2 rounded mt-3">Lưu</button>
+        <button onclick="closeAddModal()" class="bg-gray-300 px-4 py-2 rounded mt-2">Đóng</button>
+
+    </div>
+</div>
+
+<!-- ========================= MODAL SỬA SẢN PHẨM ========================= -->
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <h2 class="font-bold text-xl mb-3">Chỉnh sửa sản phẩm</h2>
+
+        <input id="edit_id" type="hidden">
+
+        <input id="edit_name" placeholder="Tên sản phẩm">
+        <input id="edit_sku" placeholder="Mã SKU">
+        <input id="edit_unit" placeholder="Đơn vị">
+        <input id="edit_category" placeholder="Nhóm sản phẩm">
+
+        <input id="edit_import" type="number" placeholder="Giá nhập">
+        <input id="edit_sell" type="number" placeholder="Giá bán">
+
+        <input id="edit_stock" type="number" placeholder="Tồn kho">
+        <input id="edit_min" type="number" placeholder="Ngưỡng cảnh báo">
+
+        <textarea id="edit_desc" placeholder="Mô tả"></textarea>
+
+        <button onclick="updateProduct()" class="bg-primary px-4 py-2 rounded">Cập nhật</button>
+        <button onclick="closeEditModal()" class="bg-gray-300 px-4 py-2 rounded mt-2">Đóng</button>
+    </div>
+</div>
+
 <script>
 const API = "http://127.0.0.1:8000/products";
+let allProducts = [];
 
+/* ==================== LOAD ==================== */
 async function loadProducts() {
     const res = await fetch(API);
-    const list = await res.json();
-    const tbody = document.getElementById("product-table-body");
+    allProducts = await res.json();
+    renderTable(allProducts);
+}
+
+/* ==================== RENDER TABLE ==================== */
+function renderTable(list) {
+    const tbody = document.getElementById("productTableBody");
     tbody.innerHTML = "";
 
-    list.forEach((p, i) => {
+    list.forEach(p => {
         tbody.innerHTML += `
-            <tr>
-                <td>${i + 1}</td>
-                <td>${p.sku || ""}</td>
-                <td>${p.name}</td>
-                <td>${p.category || ""}</td>
-                <td>${p.unit}</td>
-                <td>${p.stock ?? 0}</td>
-                <td>${p.import_price ?? 0}</td>
-                <td>${p.sell_price ?? 0}</td>
-                <td>
-                    <button class="btn btn-warning" onclick="openEditModal(${p.id})">Sửa</button>
-                    <button class="btn btn-danger" onclick="deleteProduct(${p.id})">Xóa</button>
-                </td>
-            </tr>
-        `;
+        <tr class="border-b">
+            <td class="px-6 py-4">${p.name}</td>
+            <td class="px-6 py-4">${p.sku}</td>
+            <td class="px-6 py-4">${p.unit}</td>
+            <td class="px-6 py-4">${p.category}</td>
+            <td class="px-6 py-4">${p.import_price} / ${p.sell_price}</td>
+            <td class="px-6 py-4 text-center">${p.stock}</td>
+            <td class="px-6 py-4 text-center">${p.min_stock}</td>
+
+            <td class="px-6 py-4 text-right">
+                <button onclick="openEditModal(${p.id})" class="text-blue-500">Sửa</button>
+                <button onclick="deleteProduct(${p.id})" class="text-red-500">Xóa</button>
+            </td>
+        </tr>`;
     });
 }
 
-// ---------- ADD ----------
-function openAddModal() {
-    document.getElementById("addModal").style.display = "block";
-}
-function closeAddModal() {
-    document.getElementById("addModal").style.display = "none";
-}
-
-async function addProduct() {
+/* ==================== CREATE PRODUCT ==================== */
+async function createProduct() {
     const data = {
-        sku: sku.value,
-        name: name.value,
-        category: category.value,
-        unit: unit.value,
-        import_price: Number(import_price.value),
-        sell_price: Number(sell_price.value),
-        stock: Number(stock.value),
-        min_stock: Number(min_stock.value),
-        description: description.value
+        name: document.getElementById("add_name").value,
+        sku: document.getElementById("add_sku").value,
+        unit: document.getElementById("add_unit").value,
+        category: document.getElementById("add_category").value,
+        import_price: parseFloat(document.getElementById("add_import").value),
+        sell_price: parseFloat(document.getElementById("add_sell").value),
+        stock: parseInt(document.getElementById("add_stock").value),
+        min_stock: parseInt(document.getElementById("add_min").value),
+        description: document.getElementById("add_desc").value
     };
 
-    const res = await fetch(API, {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(data)
-    });
+    try {
+        const res = await fetch("http://127.0.0.1:8000/products/products", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+        });
 
-    if (res.ok) {
-        alert("Thêm thành công!");
+        if (!res.ok) {
+            const error = await res.json();
+            alert("❌ Lỗi: " + error.detail);
+            return;
+        }
+
+        alert("✅ Thêm sản phẩm thành công!");
         closeAddModal();
         loadProducts();
-    } else {
-        alert("Lỗi khi thêm!");
+
+    } catch (err) {
+        console.error("Error:", err);
+        alert("❌ Không thể thêm sản phẩm!");
     }
 }
 
-// ---------- EDIT ----------
 async function openEditModal(id) {
-    const res = await fetch(`${API}/${id}`);
-    const p = await res.json();
+    try {
+        const res = await fetch(`${API}/${id}`);
+        const p = await res.json();
 
-    edit_id.value = p.id;
-    edit_sku.value = p.sku;
-    edit_name.value = p.name;
-    edit_category.value = p.category;
-    edit_unit.value = p.unit;
-    edit_import_price.value = p.import_price;
-    edit_sell_price.value = p.sell_price;
-    edit_stock.value = p.stock;
-    edit_min_stock.value = p.min_stock;
-    edit_description.value = p.description;
+        // Gán dữ liệu vào form
+        document.getElementById("edit_id").value = p.id;
+        document.getElementById("edit_name").value = p.name;
+        document.getElementById("edit_sku").value = p.sku;
+        document.getElementById("edit_unit").value = p.unit;
+        document.getElementById("edit_category").value = p.category;
+        document.getElementById("edit_import").value = p.import_price;
+        document.getElementById("edit_sell").value = p.sell_price;
+        document.getElementById("edit_stock").value = p.stock;
+        document.getElementById("edit_min").value = p.min_stock;
+        document.getElementById("edit_desc").value = p.description;
 
-    document.getElementById("editModal").style.display = "block";
-}
-function closeEditModal() {
-    document.getElementById("editModal").style.display = "none";
+        document.getElementById("editModal").style.display = "flex";
+
+    } catch (err) {
+        alert("Không tải được sản phẩm!");
+        console.error(err);
+    }
 }
 
 async function updateProduct() {
-    const id = edit_id.value;
+    const id = document.getElementById("edit_id").value;
 
     const data = {
-        sku: edit_sku.value,
-        name: edit_name.value,
-        category: edit_category.value,
-        unit: edit_unit.value,
-        import_price: Number(edit_import_price.value),
-        sell_price: Number(edit_sell_price.value),
-        stock: Number(edit_stock.value),
-        min_stock: Number(edit_min_stock.value),
-        description: edit_description.value
+        name: document.getElementById("edit_name").value,
+        sku: document.getElementById("edit_sku").value,
+        unit: document.getElementById("edit_unit").value,
+        category: document.getElementById("edit_category").value,
+        import_price: Number(document.getElementById("edit_import").value),
+        sell_price: Number(document.getElementById("edit_sell").value),
+        stock: Number(document.getElementById("edit_stock").value),
+        min_stock: Number(document.getElementById("edit_min").value),
+        description: document.getElementById("edit_desc").value
     };
 
     const res = await fetch(`${API}/${id}`, {
         method: "PUT",
-        headers: {"Content-Type": "application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data)
     });
 
     if (res.ok) {
-        alert("Cập nhật thành công!");
+        alert("Cập nhật sản phẩm thành công!");
         closeEditModal();
         loadProducts();
     } else {
-        alert("Lỗi khi cập nhật!");
+        alert("Lỗi khi cập nhật sản phẩm!");
     }
 }
 
-// ---------- DELETE ----------
+
+/* ==================== DELETE ==================== */
 async function deleteProduct(id) {
     if (!confirm("Bạn có chắc muốn xóa?")) return;
 
     const res = await fetch(`${API}/${id}`, { method: "DELETE" });
 
-    if (res.ok) {
-        alert("Đã xóa!");
-        loadProducts();
-    } else {
-        alert("Xóa thất bại!");
-    }
+    if (res.ok) loadProducts();
+    else alert("Không thể xóa sản phẩm!");
 }
 
-// Load khi mở page
+/* ==================== MODAL ==================== */
+function openAddModal() {
+    document.getElementById("addModal").style.display = "flex";
+}
+function closeAddModal() {
+    document.getElementById("addModal").style.display = "none";
+}
+function closeEditModal() {
+    document.getElementById("editModal").style.display = "none";
+}
+
+/* ==================== FILTER ==================== */
+function applyFilters() {
+    let keyword = document.getElementById("searchInput").value.trim().toLowerCase();
+    let selectedCategory = document.getElementById("categoryFilter").value.trim();
+
+    let filtered = allProducts.filter(p => {
+
+        // ----- LỌC THEO SEARCH -----
+        let matchSearch =
+            p.name.toLowerCase().includes(keyword) ||
+            p.sku.toLowerCase().includes(keyword);
+
+        // ----- LỌC THEO CATEGORY -----
+        let matchCategory =
+            selectedCategory === "" || p.category === selectedCategory;
+
+        return matchSearch && matchCategory;
+    });
+
+    renderTable(filtered);
+}
 window.onload = loadProducts;
 </script>
+
 </body>
 </html>

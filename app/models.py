@@ -1,20 +1,16 @@
-from sqlalchemy import Column, Integer, String, Numeric, Text
+from sqlalchemy import Column, Integer, String, Float
 from .database import Base
 
 class Product(Base):
     __tablename__ = "products"
 
     id = Column(Integer, primary_key=True, index=True)
-    sku = Column(String(50), index=True)
+    sku = Column(String, index=True)
     name = Column(String, index=True)
-    category = Column(String(100))
+    category = Column(String)
     unit = Column(String)
-
-    import_price = Column(Numeric(12, 2), default=0)
-    sell_price = Column(Numeric(12, 2), default=0)
-
-    stock = Column(Numeric(12, 3), default=0)
-    min_stock = Column(Integer, default=0)
-
-    description = Column(Text)
-    image_url = Column(Text)
+    import_price = Column(Float)
+    sell_price = Column(Float)
+    stock = Column(Integer)
+    min_stock = Column(Integer)
+    description = Column(String)

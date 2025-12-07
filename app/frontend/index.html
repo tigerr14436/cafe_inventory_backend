@@ -58,41 +58,35 @@ tailwind.config = {
 <div class="flex flex-1">
 
 <!-- SIDEBAR -->
-<aside class="sticky top-0 flex h-screen w-64 flex-col bg-card-light dark:bg-card-dark border-r border-border-light dark:border-border-dark">
-    <div class="flex h-full flex-col justify-between p-4">
-
-        <div class="flex flex-col gap-4">
-            <div class="flex items-center gap-3 p-2">
-                <div class="rounded-full size-12 bg-cover bg-center" 
-                     style='background-image: url("https://i.imgur.com/8Km9tLL.png");'></div>
-                <div>
-                    <h1 class="text-text-light-primary dark:text-text-dark-primary text-base font-bold">The Coffee House</h1>
-                    <p class="text-text-light-secondary dark:text-text-dark-secondary text-sm">Quản lý kho</p>
-                </div>
-            </div>
-
-            <nav class="flex flex-col gap-2 mt-4">
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 dark:bg-primary/20" href="#">
-                    <span class="material-symbols-outlined text-primary text-2xl">dashboard</span>
-                    <p class="text-primary text-sm font-bold">Tổng quan</p>
-                </a>
-
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800" 
-                   href="san_pham.html">
-                    <span class="material-symbols-outlined text-text-light-secondary dark:text-text-dark-secondary text-2xl">inventory_2</span>
-                    <p class="text-text-light-primary dark:text-text-dark-primary text-sm">Quản lý sản phẩm</p>
-                </a>
-            </nav>
-        </div>
-
-        <div>
-            <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800" href="#">
-                <span class="material-symbols-outlined text-text-light-secondary dark:text-text-dark-secondary text-2xl">logout</span>
-                <p class="text-text-light-primary dark:text-text-dark-primary text-sm">Đăng xuất</p>
-            </a>
-        </div>
-
+<aside class="w-64 bg-white border-r">
+  <div class="p-4">
+    <div class="flex items-center gap-3">
+      <div class="size-10 rounded-full bg-cover"
+        style='background-image:url("https://i.imgur.com/8Km9tLL.png")'></div>
+      <div>
+        <h1 class="font-semibold">Cafe A.</h1>
+        <p class="text-sm text-gray-600">Hệ thống quản lý</p>
+      </div>
     </div>
+
+    <nav class="mt-6 flex flex-col gap-2">
+
+      <!-- Dashboard -->
+      <a href="index.html" class="flex items-center gap-3 px-3 py-2 rounded bg-primary/30">
+        <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1">
+          dashboard
+        </span>
+        Tổng quan
+      </a>
+
+      <!-- Products -->
+      <a href="san_pham.html" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-200">
+        <span class="material-symbols-outlined">inventory_2</span>
+        Sản phẩm
+      </a>
+
+    </nav>
+  </div>
 </aside>
 
 <!-- MAIN CONTENT -->
@@ -148,7 +142,10 @@ async function loadDashboard() {
         const data = await res.json();
 
         document.getElementById("total_products").innerText = data.total_products;
-        document.getElementById("total_stock_value").innerText = data.total_stock_value.toLocaleString("vi-VN") + " đ";
+
+        document.getElementById("total_stock_value").innerText =
+            data.total_stock_value.toLocaleString("vi-VN") + " đ";
+
         document.getElementById("low_stock").innerText = data.low_stock;
 
     } catch (err) {
