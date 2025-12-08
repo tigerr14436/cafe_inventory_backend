@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.database import Base, engine
-from app.routers import products, dashboard
+from app.routers import products, dashboard, imports
 
 Base.metadata.create_all(bind=engine)
 
@@ -17,7 +17,8 @@ app.add_middleware(
 )
 
 app.include_router(products.router, prefix="/products", tags=["Products"])
-app.include_router(dashboard.router, tags=["Dashboard"])
+app.include_router(dashboard.router, prefix="/dashboard", tags=["Dashboard"])
+app.include_router(imports.router, prefix="/imports", tags=["Imports"])
 
 @app.get("/")
 def home():

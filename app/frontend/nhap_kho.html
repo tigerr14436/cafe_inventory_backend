@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html class="light" lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nhập Kho</title>
+
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+
+<style>
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+.material-symbols-outlined.fill {
+  font-variation-settings: 'FILL' 1;
+}
+</style>
+
+<script>
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        "primary": "#1E7C4B",
+        "background-light": "#f7f8fa",
+        "background-dark": "#101a14",
+        "surface-light": "#ffffff",
+        "surface-dark": "#1a2c22",
+        "text-primary-light": "#131811",
+        "text-primary-dark": "#e8f5e9",
+        "text-secondary-light": "#4F4F4F",
+        "text-secondary-dark": "#a5d6a7",
+        "border-light": "#e0e0e0",
+        "border-dark": "#385443",
+        "accent": "#F2994A"
+      },
+      fontFamily: { display: ["Work Sans", "sans-serif"] }
+    }
+  }
+}
+</script>
+
+</head>
+
+<body class="font-display bg-background-light dark:bg-background-dark text-text-primary-light dark:text-text-primary-dark">
+<div class="flex min-h-screen">
+
+<!-- ================= SIDEBAR ================ -->
+<aside class="w-64 bg-white border-r h-screen fixed left-0 top-0">
+  <div class="p-4">
+    <div class="flex items-center gap-3">
+      <div class="size-10 rounded-full bg-cover"
+        style='background-image:url("https://i.imgur.com/8Km9tLL.png")'></div>
+      <div>
+        <h1 class="font-semibold">Cafe A.</h1>
+        <p class="text-sm text-gray-600">Hệ thống quản lý</p>
+      </div>
+    </div>
+
+    <nav class="mt-6 flex flex-col gap-2">
+      <a href="index.html" class="menu-item flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-200">
+        <span class="material-symbols-outlined">dashboard</span> Tổng quan
+      </a>
+
+      <a href="san_pham.html" class="menu-item flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-200">
+        <span class="material-symbols-outlined">inventory_2</span> Sản phẩm
+      </a>
+
+      <a href="nhap_kho.html" class="menu-item flex items-center gap-3 px-3 py-2 rounded bg-gray-200 font-semibold">
+        <span class="material-symbols-outlined">archive</span> Nhập kho
+      </a>
+    </nav>
+  </div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="flex-1 p-6 lg:p-8 ml-64">
+<div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+<!-- ================= FORM NHẬP KHO ================= -->
+<div class="lg:col-span-2 flex flex-col gap-6">
+
+    <h1 class="text-3xl font-bold">Tạo Phiếu Nhập Kho</h1>
+
+    <div class="bg-surface-light p-6 rounded-xl border border-border-light flex flex-col gap-6">
+
+        <!-- Thông tin chung -->
+        <div>
+            <h3 class="text-lg font-semibold mb-4">Thông tin chung</h3>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="text-sm">Mã phiếu</label>
+                    <input id="import_code" class="form-input w-full h-12 px-3 rounded-lg bg-background-light border">
+                </div>
+
+                <div>
+                    <label class="text-sm">Ngày nhập</label>
+                    <input id="import_date" type="date" class="form-input w-full h-12 px-3 rounded-lg bg-background-light border">
+                </div>
+            </div>
+
+            <label class="mt-3 block text-sm">Nhà cung cấp</label>
+            <input id="supplier" class="form-input w-full h-12 px-3 rounded-lg bg-background-light border">
+        </div>
+
+        <!-- Chọn sản phẩm -->
+        <div>
+            <h3 class="text-lg font-semibold mb-3">Chọn sản phẩm nhập kho</h3>
+
+            <div class="grid grid-cols-3 gap-4 mb-4">
+                <select id="select_product" class="form-input h-12 px-2 rounded-lg bg-background-light border"></select>
+
+                <input id="select_quantity" type="number" placeholder="Số lượng"
+                       class="form-input h-12 px-3 bg-background-light border">
+
+                <button onclick="addProductToTable()" class="h-12 bg-primary text-white px-4 rounded-lg">
+                    Thêm
+                </button>
+            </div>
+        </div>
+
+        <!-- TABLE -->
+        <div class="overflow-x-auto rounded-lg border">
+            <table class="w-full text-sm">
+                <thead class="bg-background-light text-xs uppercase">
+                    <tr>
+                        <th class="px-4 py-3">Sản phẩm</th>
+                        <th class="px-4 py-3">Đơn vị</th>
+                        <th class="px-4 py-3">Số lượng</th>
+                        <th class="px-4 py-3">Đơn giá</th>
+                        <th class="px-4 py-3 text-right">Tổng</th>
+                        <th></th>
+                    </tr>
+                </thead>
+
+                <tbody id="detailTable"></tbody>
+            </table>
+        </div>
+
+        <!-- Tổng tiền -->
+        <div class="flex flex-col gap-2 text-sm mt-4">
+            <div class="flex justify-between"><span>Tổng tiền hàng</span><span id="total_price">0 đ</span></div>
+            <div class="flex justify-between"><span>VAT (10%)</span><span id="vat_price">0 đ</span></div>
+
+            <div class="border-t my-2"></div>
+
+            <div class="flex justify-between text-lg font-bold">
+                <span>Tổng thanh toán</span>
+                <span id="final_price">0 đ</span>
+            </div>
+        </div>
+
+        <button onclick="submitImport()" class="px-5 py-2.5 text-sm font-semibold rounded-lg bg-primary text-white">
+            Lưu & Xác nhận
+        </button>
+
+    </div>
+</div>
+
+<!-- ================= LỊCH SỬ NHẬP KHO ================ -->
+<div class="lg:col-span-1 flex flex-col gap-6">
+
+<div class="bg-surface-light p-6 rounded-xl border">
+
+    <h3 class="text-lg font-semibold mb-3">Lịch sử nhập kho</h3>
+
+    <input class="form-input mb-3 pl-10 h-12 w-full rounded-lg bg-background-light border"
+           placeholder="Tìm theo mã phiếu, NCC...">
+
+    <div id="historyBox" class="flex flex-col gap-4 max-h-[600px] overflow-y-auto"></div>
+
+    <!-- POPUP -->
+    <div id="importDetailModal"
+         class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+        <div class="bg-white dark:bg-surface-dark p-6 rounded-xl w-full max-w-2xl">
+
+            <h2 class="text-xl font-bold mb-4">Chi tiết phiếu nhập</h2>
+
+            <div id="modalInfo" class="text-sm mb-3"></div>
+
+            <table class="w-full text-sm border">
+                <thead class="bg-gray-100">
+                    <tr>
+                        <th class="px-3 py-2">Sản phẩm</th>
+                        <th class="px-3 py-2">SL</th>
+                        <th class="px-3 py-2">Giá</th>
+                        <th class="px-3 py-2 text-right">Tổng</th>
+                    </tr>
+                </thead>
+                <tbody id="modalTable"></tbody>
+            </table>
+
+            <div class="mt-4 flex justify-between font-semibold">
+                <span>Tổng tiền:</span>
+                <span id="modalTotal"></span>
+            </div>
+
+            <div class="mt-4 text-right">
+                <button onclick="closeModal()" class="px-4 py-2 bg-primary text-white rounded-lg">
+                    Đóng
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+</div>
+</div>
+</main>
+</div>
+
+<script>
+const API_PRODUCTS = "http://127.0.0.1:8000/products/";
+const API_IMPORT = "http://127.0.0.1:8000/imports/";
+
+let allProducts = [];
+let detailList = [];
+
+/* ======================================
+   LOAD SẢN PHẨM
+====================================== */
+async function loadProducts() {
+    const res = await fetch(API_PRODUCTS);
+    allProducts = await res.json();
+
+    let select = document.getElementById("select_product");
+    select.innerHTML = `<option value="">-- Chọn sản phẩm --</option>`;
+
+    allProducts.forEach(p => {
+        select.innerHTML += `<option value="${p.id}">${p.name} (${p.sku})</option>`;
+    });
+}
+
+/* ======================================
+   THÊM SẢN PHẨM
+====================================== */
+function addProductToTable() {
+    const id = document.getElementById("select_product").value;
+    const qty = Number(document.getElementById("select_quantity").value);
+
+    if (!id || qty <= 0) return alert("Vui lòng chọn sản phẩm và nhập số lượng!");
+
+    const product = allProducts.find(p => p.id == id);
+
+    const price = product.import_price || product.price || 0;
+    const total = qty * price;
+
+    detailList.push({
+        product_id: product.id,
+        name: product.name,
+        quantity: qty,
+        unit: product.unit,
+        price: price,
+        total_price: total
+    });
+
+    renderTable();
+}
+
+/* ======================================
+   RENDER TABLE
+====================================== */
+function renderTable() {
+    let tbody = document.getElementById("detailTable");
+    tbody.innerHTML = "";
+
+    detailList.forEach((d, i) => {
+        tbody.innerHTML += `
+            <tr class="border-b">
+                <td class="px-4 py-3">${d.name}</td>
+                <td class="px-4 py-3">${d.unit}</td>
+                <td class="px-4 py-3">${d.quantity}</td>
+                <td class="px-4 py-3">${d.price.toLocaleString()} đ</td>
+                <td class="px-4 py-3 text-right">${d.total_price.toLocaleString()} đ</td>
+                <td><button onclick="removeDetail(${i})" class="text-red-500">X</button></td>
+            </tr>
+        `;
+    });
+
+    calcTotal();
+}
+
+/* ======================================
+   XÓA CHI TIẾT
+====================================== */
+function removeDetail(i) {
+    detailList.splice(i, 1);
+    renderTable();
+}
+
+/* ======================================
+   TÍNH TỔNG
+====================================== */
+function calcTotal() {
+    let total = detailList.reduce((sum, d) => sum + d.total_price, 0);
+    let vat = total * 0.1;
+
+    document.getElementById("total_price").innerText = total.toLocaleString() + " đ";
+    document.getElementById("vat_price").innerText = vat.toLocaleString() + " đ";
+    document.getElementById("final_price").innerText = (total + vat).toLocaleString() + " đ";
+}
+
+/* ======================================
+   SUBMIT
+====================================== */
+async function submitImport() {
+
+    const code = document.getElementById("import_code").value;
+    const supplier = document.getElementById("supplier").value;
+    const date = document.getElementById("import_date").value;
+
+    if (!code || !supplier || !date) {
+        alert("Vui lòng nhập đầy đủ thông tin!");
+        return;
+    }
+
+    if (detailList.length === 0) {
+        alert("Vui lòng thêm sản phẩm!");
+        return;
+    }
+
+    const payload = {
+        code: code,
+        supplier: supplier,
+        import_date: date,
+        details: detailList.map(d => ({
+            product_id: d.product_id,
+            quantity: d.quantity,
+            price: d.price
+        }))
+    };
+
+    const res = await fetch(API_IMPORT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) {
+        const err = await res.json();
+        alert("Lỗi nhập kho: " + err.detail);
+        return;
+    }
+
+    alert("Nhập kho thành công!");
+    loadHistory();
+    detailList = [];
+    renderTable();
+}
+
+/* ======================================
+   LOAD LỊCH SỬ
+====================================== */
+async function loadHistory() {
+    const res = await fetch(API_IMPORT);
+    const data = await res.json();
+
+    data.sort((a, b) => b.id - a.id); 
+
+    let box = document.getElementById("historyBox");
+    box.innerHTML = "";
+
+    data.forEach(item => {
+        box.innerHTML += `
+            <div onclick="openDetail(${item.id})"
+                 class="p-4 border rounded-lg cursor-pointer hover:bg-gray-100">
+
+                <div class="font-semibold">${item.code}</div>
+                <div class="text-sm text-gray-600">NCC: ${item.supplier}</div>
+                <div class="text-sm">Ngày: ${item.import_date}</div>
+                <div class="text-sm font-semibold text-primary mt-1">
+                    Tổng: ${(item.total || 0).toLocaleString()} đ
+                </div>
+            </div>
+        `;
+    });
+}
+
+/* ======================================
+   MỞ POPUP
+====================================== */
+async function openDetail(id) {
+    const res = await fetch(API_IMPORT + id);
+    const json = await res.json();
+
+    document.getElementById("importDetailModal").classList.remove("hidden");
+
+    const info = json.import;
+
+    document.getElementById("modalInfo").innerHTML = `
+        <div><b>Mã phiếu:</b> ${info.code}</div>
+        <div><b>Nhà cung cấp:</b> ${info.supplier}</div>
+        <div><b>Ngày nhập:</b> ${info.import_date}</div>
+    `;
+
+    let tbody = document.getElementById("modalTable");
+    tbody.innerHTML = "";
+
+    json.details.forEach(d => {
+        tbody.innerHTML += `
+            <tr class="border-b">
+                <td class="px-3 py-2">${d.product_name}</td>
+                <td class="px-3 py-2">${d.quantity}</td>
+                <td class="px-3 py-2">${d.price.toLocaleString()} đ</td>
+                <td class="px-3 py-2 text-right">${d.total_price.toLocaleString()} đ</td>
+            </tr>
+        `;
+    });
+
+    document.getElementById("modalTotal").innerText =
+        (json.import.total || 0).toLocaleString() + " đ";
+}
+
+/* ======================================
+   ĐÓNG POPUP
+====================================== */
+function closeModal() {
+    document.getElementById("importDetailModal").classList.add("hidden");
+}
+
+loadProducts();
+loadHistory();
+  
+</script>
+
+</body>
+</html>

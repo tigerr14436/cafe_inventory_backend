@@ -6,7 +6,7 @@ from app.models import Product
 
 router = APIRouter()
 
-@router.get("/dashboard/summary")
+@router.get("/summary")  # chỉ để /summary
 def dashboard_summary(db: Session = Depends(get_db)):
     total_products = db.query(Product).count()
 
