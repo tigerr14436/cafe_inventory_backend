@@ -41,7 +41,19 @@ tailwind.config = {
     }
 }
 </script>
+<script>
+    // Gửi tên file đang mở vào iframe sidebar
+    function sendPageName() {
+        const page = window.location.pathname.split("/").pop();
+        const sidebar = document.querySelector("iframe");
 
+        if (sidebar && sidebar.contentWindow) {
+            sidebar.contentWindow.postMessage({page}, "*");
+        }
+    }
+
+    window.onload = sendPageName;
+</script>
 <style>
 .material-symbols-outlined {
     font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
@@ -57,46 +69,7 @@ tailwind.config = {
 
 <div class="flex flex-1">
 
-<!-- ================= SIDEBAR ================ -->
-<aside class="w-64 bg-white border-r h-screen fixed left-0 top-0">
-  <div class="p-4">
-    <!-- Logo + Info -->
-    <div class="flex items-center gap-3">
-      <div class="size-10 rounded-full bg-cover"
-        style='background-image:url("https://i.imgur.com/8Km9tLL.png")'></div>
-      <div>
-        <h1 class="font-semibold">Cafe A.</h1>
-        <p class="text-sm text-gray-600">Hệ thống quản lý</p>
-      </div>
-    </div>
-
-    <!-- MENU -->
-    <nav class="mt-6 flex flex-col gap-2">
-
-      <!-- Dashboard -->
-      <a href="index.html" id="menu-dashboard"
-        class="menu-item flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-200">
-        <span class="material-symbols-outlined">dashboard</span>
-        Tổng quan
-      </a>
-
-      <!-- Sản phẩm -->
-      <a href="san_pham.html" id="menu-products"
-        class="menu-item flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-200">
-        <span class="material-symbols-outlined">inventory_2</span>
-        Sản phẩm
-      </a>
-
-      <!-- Nhập kho -->
-      <a href="nhap_kho.html" id="menu-import"
-        class="menu-item flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-200">
-        <span class="material-symbols-outlined">archive</span>
-        Nhập kho
-      </a>
-
-    </nav>
-  </div>
-</aside>
+<iframe src="sidebar.html" class="fixed left-0 top-0 w-64 h-full border-r" frameborder="0"></iframe>
 
 <!-- MAIN CONTENT -->
 <main class="flex-1 p-8 overflow-y-auto">
