@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="vi" class="light">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Kiểm kho</title>
+
+<!-- TailwindCSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+<style>
+body { margin-left: 16rem; }
+.material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+.material-symbols-outlined.fill { font-variation-settings: 'FILL' 1; }
+</style>
+
+<script>
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        primary: "#1E7C4B",
+        background_light: "#f7f8fa",
+        surface_light: "#ffffff",
+        success: "#28A745",
+        warning: "#FFC107",
+        danger: "#DC3545"
+      }
+    }
+  }
+};
+</script>
+<script>
+    // Gửi tên file đang mở vào iframe sidebar
+    function sendPageName() {
+        const page = window.location.pathname.split("/").pop();
+        const sidebar = document.querySelector("iframe");
+
+        if (sidebar && sidebar.contentWindow) {
+            sidebar.contentWindow.postMessage({page}, "*");
+        }
+    }
+
+    window.onload = sendPageName;
+</script>
+</head>
+
+<body class="font-sans bg-background_light">
+
+<iframe src="sidebar.html" class="fixed left-0 top-0 w-64 h-full border-r" frameborder="0"></iframe>
+
+<main class="flex-1 p-6 lg:p-8 ml-64">
+<div class="max-w-7xl mx-auto flex flex-col gap-6">
+<h1 class="text-3xl font-bold">Quản lý Kiểm kho</h1>
+
+<!-- Control Panel -->
+<div class="flex flex-col md:flex-row gap-4 items-center">
+    <input type="date" id="check_date" class="form-input h-12 px-3 rounded-lg">
+    <select id="categoryFilter" onchange="applyFilters()" class="h-12 px-3 rounded bg-gray-100">
+        <option value="">Lọc theo nhóm</option>
+        <option>Hạt cà phê</option>
+        <option>Bột cacao</option>
+        <option>Syrup</option>
+        <option>Nguyên liệu</option>
+        <option>Trà</option>
+        <option>Khác</option>
+    </select>
+    <button id="btnSave" class="h-12 px-6 bg-primary text-white rounded-lg">Hoàn tất & Cân bằng kho</button>
+</div>
+
+<!-- Table -->
+<div class="overflow-x-auto rounded-lg border mt-4">
+<table class="w-full text-sm text-left">
+<thead class="bg-gray-100 text-xs uppercase">
+<tr>
+<th class="px-4 py-3">STT</th>
+<th class="px-4 py-3">Mã SP</th>
+<th class="px-4 py-3">Tên sản phẩm</th>
+<th class="px-4 py-3">Nhóm</th>
+<th class="px-4 py-3">Đơn vị</th>
+<th class="px-4 py-3">Tồn hệ thống</th>
+<th class="px-4 py-3">Tồn thực tế</th>
+<th class="px-4 py-3">Chênh lệch</th>
+<th class="px-4 py-3">Ghi chú</th>
+</tr>
+</thead>
+<tbody id="inventoryTable" class="bg-surface_light"></tbody>
+</table>
+</div>
+
+</div>
+</main>
+
+<script>
+const API_INVENTORY = "http://127.0.0.1:8000/inventory_check";
+let inventoryData = []; // dữ liệu đầy đủ ngày hiện tại
+
+/* ================================
+   1. LOAD DỮ LIỆU KHI CHỌN NGÀY
+================================ */
+document.getElementById("check_date").addEventListener("change", loadInventoryByDate);
+
+async function loadInventoryByDate() {
+    const checkDate = document.getElementById("check_date").value;
+    if (!checkDate) return;
+
+    const res = await fetch(`${API_INVENTORY}/${checkDate}`);
+    const data = await res.json();
+
+    // Map dữ liệu để frontend biết unit, category, min_stock
+    inventoryData = data.items.map(item => ({
+        product_id: item.product_id,
+        product_name: item.product_name,
+        system_stock: item.system_stock,
+        real_stock: item.real_stock,
+        difference: item.difference,
+        note: item.note ?? "",
+        unit: item.unit ?? "",
+        category: item.category ?? "Khác",
+        min_stock: item.min_stock ?? 10
+    }));
+
+    renderTable();
+}
+
+/* ================================
+   2. RENDER BẢNG KIỂM KHO
+================================ */
+function renderTable() {
+    const tbody = document.getElementById("inventoryTable");
+    tbody.innerHTML = "";
+
+    const categoryFilter = document.getElementById("categoryFilter").value.trim();
+
+    inventoryData.forEach((item, i) => {
+        if (categoryFilter && item.category !== categoryFilter) return;
+
+        // Tính màu cảnh báo
+        let stockColor = "text-success"; // xanh lá
+        if (item.real_stock <= item.min_stock) stockColor = "text-danger";
+        else if (item.real_stock <= item.min_stock * 2) stockColor = "text-warning";
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td class="px-4 py-3">${i+1}</td>
+            <td class="px-4 py-3 font-medium">${item.product_id}</td>
+            <td class="px-4 py-3">${item.product_name}</td>
+            <td class="px-4 py-3">${item.category}</td>
+            <td class="px-4 py-3">${item.unit}</td>
+            <td class="px-4 py-3 system-stock">${item.system_stock}</td>
+            <td class="px-4 py-3">
+                <input type="number" class="form-input w-24 real-stock ${stockColor}" 
+                       value="${item.real_stock}" data-id="${item.product_id}" />
+            </td>
+            <td class="px-4 py-3 diff font-bold">0</td>
+            <td class="px-4 py-3">
+                <input type="text" class="form-input w-32 note" value="${item.note}" />
+            </td>
+        `;
+        tbody.appendChild(tr);
+
+        updateDifference(tr);
+        tr.querySelector(".real-stock").addEventListener("input", () => updateDifference(tr));
+    });
+}
+
+/* ================================
+   3. TÍNH CHÊNH LỆCH
+================================ */
+function updateDifference(tr) {
+    const system = Number(tr.querySelector(".system-stock").innerText);
+    const real = Number(tr.querySelector(".real-stock").value);
+    const diffCell = tr.querySelector(".diff");
+
+    const diff = real - system;
+    diffCell.innerText = diff;
+    diffCell.className = `px-4 py-3 font-bold diff ${diff >= 0 ? 'text-success' : 'text-danger'}`;
+
+    // Update màu cảnh báo tồn kho
+    const realInput = tr.querySelector(".real-stock");
+    const min_stock = parseInt(realInput.dataset.min ?? 10);
+    if (real <= min_stock) realInput.className = "form-input w-24 text-danger real-stock";
+    else if (real <= min_stock * 2) realInput.className = "form-input w-24 text-warning real-stock";
+    else realInput.className = "form-input w-24 text-success real-stock";
+}
+
+/* ================================
+   4. LƯU DỮ LIỆU KIỂM KHO
+================================ */
+async function saveInventory() {
+    const checkDate = document.getElementById("check_date").value;
+    if (!checkDate) { alert("Vui lòng chọn ngày kiểm kho!"); return; }
+
+    const rows = document.querySelectorAll("#inventoryTable tr");
+    let items = [];
+
+    for (const tr of rows) {
+        const productId = Number(tr.querySelector(".real-stock").dataset.id);
+        const systemStock = Number(tr.querySelector(".system-stock").innerText);
+        const realStock = Number(tr.querySelector(".real-stock").value);
+        const note = tr.querySelector(".note").value;
+        const diff = realStock - systemStock;
+
+        items.push({
+            product_id: productId,
+            system_stock: systemStock,
+            real_stock: realStock,
+            difference: diff,
+            note: note
+        });
+    }
+
+    const payload = { check_date: checkDate, items };
+    await fetch(`${API_INVENTORY}/save`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(payload)
+    });
+
+    alert("Đã lưu kiểm kho thành công!");
+}
+
+/* ================================
+   5. SỰ KIỆN
+================================ */
+document.getElementById("btnSave").addEventListener("click", saveInventory);
+document.getElementById("categoryFilter").addEventListener("change", renderTable);
+</script>
+</body>
+</html>

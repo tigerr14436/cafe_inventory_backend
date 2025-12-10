@@ -211,7 +211,7 @@ tailwind.config = {
 
 <script>
 const API_PRODUCTS = "http://127.0.0.1:8000/products/";
-const API_EXPORT = "http://127.0.0.1:8000/exports/";
+const API_EXPORT = "http://127.0.0.1:8000/export/"; // nếu file backend là export.py
 
 let allProducts = [];
 let detailList = [];
@@ -221,11 +221,11 @@ async function loadProducts() {
     const res = await fetch(API_PRODUCTS);
     allProducts = await res.json();
 
-    let select = document.getElementById("select_product");
+    const select = document.getElementById("select_product");
     select.innerHTML = `<option value="">-- Chọn sản phẩm --</option>`;
 
     allProducts.forEach(p => {
-        select.innerHTML += `<option value="${p.id}">${p.name} (${p.sku})</option>`;
+        select.innerHTML += `<option value="${p.id}">${p.name} (${p.sku}) - Tồn: ${p.stock}</option>`;
     });
 }
 
@@ -237,7 +237,13 @@ function addProductToTable() {
     if (!id || qty <= 0) return alert("Vui lòng chọn sản phẩm và nhập số lượng!");
 
     const product = allProducts.find(p => p.id == id);
-    const price = product.import_price || product.price || 0;
+    if (!product) return alert("Sản phẩm không tồn tại!");
+
+    if (qty > product.stock) {
+        return alert(`Sản phẩm ${product.name} chỉ còn ${product.stock} trong kho!`);
+    }
+
+    const price = product.sell_price || product.import_price || 0;
     const total = qty * price;
 
     detailList.push({
@@ -252,9 +258,9 @@ function addProductToTable() {
     renderTable();
 }
 
-/* ========== RENDER ========== */
+/* ========== RENDER BẢNG CHI TIẾT ========== */
 function renderTable() {
-    let tbody = document.getElementById("detailTable");
+    const tbody = document.getElementById("detailTable");
     tbody.innerHTML = "";
 
     detailList.forEach((d, i) => {
@@ -273,40 +279,36 @@ function renderTable() {
     calcTotal();
 }
 
-/* ========== XÓA ========== */
+/* ========== XÓA SẢN PHẨM ========== */
 function removeDetail(i) {
     detailList.splice(i, 1);
     renderTable();
 }
 
-/* ========== TỔNG ========== */
+/* ========== TÍNH TỔNG ========== */
 function calcTotal() {
-    let total = detailList.reduce((sum, d) => sum + d.total_price, 0);
-
+    const total = detailList.reduce((sum, d) => sum + d.total_price, 0);
     document.getElementById("total_price").innerText = total.toLocaleString() + " đ";
     document.getElementById("final_price").innerText = total.toLocaleString() + " đ";
 }
 
-/* ========== SUBMIT ========== */
+/* ========== GỬI PHIẾU XUẤT ========== */
 async function submitExport() {
-
     const code = document.getElementById("export_code").value;
-    const receiver = document.getElementById("receiver").value; // tên input vẫn receiver
+    const receiver = document.getElementById("receiver").value;
     const date = document.getElementById("export_date").value;
 
     if (!code || !receiver || !date) {
-        alert("Vui lòng nhập đầy đủ thông tin!");
-        return;
+        return alert("Vui lòng nhập đầy đủ thông tin!");
     }
 
     if (detailList.length === 0) {
-        alert("Vui lòng thêm sản phẩm!");
-        return;
+        return alert("Vui lòng thêm sản phẩm!");
     }
 
     const payload = {
         code: code,
-        customer: receiver,  // map receiver -> customer
+        customer: receiver,  // backend dùng key 'customer'
         export_date: date,
         details: detailList.map(d => ({
             product_id: d.product_id,
@@ -315,90 +317,102 @@ async function submitExport() {
         }))
     };
 
-    const res = await fetch(API_EXPORT, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-    });
+    try {
+        const res = await fetch(API_EXPORT, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
 
-    if (!res.ok) {
-        const err = await res.json();
-        alert("Lỗi xuất kho: " + err.detail);
-        return;
+        if (!res.ok) {
+            const err = await res.json();
+            return alert("Lỗi xuất kho: " + (err.detail || JSON.stringify(err)));
+        }
+
+        alert("Xuất kho thành công!");
+        detailList = [];
+        renderTable();
+        loadHistory();
+    } catch (error) {
+        console.error(error);
+        alert("Lỗi kết nối tới server!");
     }
-
-    alert("Xuất kho thành công!");
-    loadHistory();
-    detailList = [];
-    renderTable();
 }
 
-/* ========== LỊCH SỬ ========== */
+/* ========== LOAD LỊCH SỬ XUẤT KHO ========== */
 async function loadHistory() {
-    const res = await fetch(API_EXPORT);
-    const data = await res.json();
+    try {
+        const res = await fetch(API_EXPORT);
+        const data = await res.json();
+        data.sort((a, b) => b.id - a.id);
 
-    data.sort((a, b) => b.id - a.id);
+        const box = document.getElementById("historyBox");
+        box.innerHTML = "";
 
-    let box = document.getElementById("historyBox");
-    box.innerHTML = "";
-
-    data.forEach(item => {
-        box.innerHTML += `
-            <div onclick="openDetail(${item.id})"
-                 class="p-4 border rounded-lg cursor-pointer hover:bg-gray-100">
-
-                <div class="font-semibold">${item.code}</div>
-                <div class="text-sm text-gray-600">Người nhận: ${item.receiver}</div>
-                <div class="text-sm">Ngày: ${item.export_date}</div>
-                <div class="text-sm font-semibold text-primary mt-1">
-                    Tổng: ${(item.total || 0).toLocaleString()} đ
+        data.forEach(item => {
+            box.innerHTML += `
+                <div onclick="openDetail(${item.id})"
+                     class="p-4 border rounded-lg cursor-pointer hover:bg-gray-100">
+                    <div class="font-semibold">${item.code}</div>
+                    <div class="text-sm text-gray-600">Người nhận: ${item.receiver}</div>
+                    <div class="text-sm">Ngày: ${item.export_date}</div>
+                    <div class="text-sm font-semibold text-primary mt-1">
+                        Tổng: ${(item.total || 0).toLocaleString()} đ
+                    </div>
                 </div>
-            </div>
-        `;
-    });
+            `;
+        });
+    } catch (error) {
+        console.error(error);
+    }
 }
 
-/* ========== POPUP ========== */
+/* ========== XEM CHI TIẾT PHIẾU ========== */
 async function openDetail(id) {
-    const res = await fetch(API_EXPORT + id);
-    const json = await res.json();
+    try {
+        const res = await fetch(API_EXPORT + id);
+        const json = await res.json();
 
-    document.getElementById("exportDetailModal").classList.remove("hidden");
+        document.getElementById("exportDetailModal").classList.remove("hidden");
 
-    const info = json.export;
+        const info = json.export;
 
-    document.getElementById("modalInfo").innerHTML = `
-        <div><b>Mã phiếu:</b> ${info.code}</div>
-        <div><b>Người nhận:</b> ${info.receiver}</div>
-        <div><b>Ngày xuất:</b> ${info.export_date}</div>
-    `;
-
-    let tbody = document.getElementById("modalTable");
-    tbody.innerHTML = "";
-
-    json.details.forEach(d => {
-        tbody.innerHTML += `
-            <tr class="border-b">
-                <td class="px-3 py-2">${d.product_name}</td>
-                <td class="px-3 py-2">${d.quantity}</td>
-                <td class="px-3 py-2">${d.price.toLocaleString()} đ</td>
-                <td class="px-3 py-2 text-right">${d.total_price.toLocaleString()} đ</td>
-            </tr>
+        document.getElementById("modalInfo").innerHTML = `
+            <div><b>Mã phiếu:</b> ${info.code}</div>
+            <div><b>Người nhận:</b> ${info.customer}</div>
+            <div><b>Ngày xuất:</b> ${info.export_date}</div>
         `;
-    });
 
-    document.getElementById("modalTotal").innerText =
-        (json.export.total || 0).toLocaleString() + " đ";
+        const tbody = document.getElementById("modalTable");
+        tbody.innerHTML = "";
+
+        json.details.forEach(d => {
+            tbody.innerHTML += `
+                <tr class="border-b">
+                    <td class="px-3 py-2">${d.product_name}</td>
+                    <td class="px-3 py-2">${d.quantity}</td>
+                    <td class="px-3 py-2">${d.price.toLocaleString()} đ</td>
+                    <td class="px-3 py-2 text-right">${d.total_price.toLocaleString()} đ</td>
+                </tr>
+            `;
+        });
+
+        document.getElementById("modalTotal").innerText =
+            (json.export.total || 0).toLocaleString() + " đ";
+    } catch (error) {
+        console.error(error);
+    }
 }
 
 function closeModal() {
     document.getElementById("exportDetailModal").classList.add("hidden");
 }
 
+// ================= INIT =================
 loadProducts();
 loadHistory();
 </script>
+
 
 </body>
 </html>
