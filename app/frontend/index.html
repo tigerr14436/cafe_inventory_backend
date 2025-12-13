@@ -1,14 +1,19 @@
 <!DOCTYPE html>
-<html class="light" lang="vi">
+<html lang="vi" class="light">
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Trang tổng quan</title>
+
+<!-- Tailwind -->
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 
-<!-- FONT -->
-<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;600;700&display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
 
 <script>
 tailwind.config = {
@@ -27,12 +32,11 @@ tailwind.config = {
                 "text-dark-secondary": "#AFAFAF",
                 "border-light": "#E0E0E0",
                 "border-dark": "#333333",
-                accent: "#FFAB40",
-                warning: "#FFC107",
-                danger: "#D32F2F",
                 import: "#2196F3",
                 export: "#FF9800",
-                inventory: "#4CAF50"
+                inventory: "#4CAF50",
+                warning: "#FFC107",
+                danger: "#D32F2F"
             },
             fontFamily: {
                 display: ["Work Sans", "sans-serif"]
@@ -41,108 +45,283 @@ tailwind.config = {
     }
 }
 </script>
-<script>
-    // Gửi tên file đang mở vào iframe sidebar
-    function sendPageName() {
-        const page = window.location.pathname.split("/").pop();
-        const sidebar = document.querySelector("iframe");
 
-        if (sidebar && sidebar.contentWindow) {
-            sidebar.contentWindow.postMessage({page}, "*");
-        }
-    }
-
-    window.onload = sendPageName;
-</script>
 <style>
 .material-symbols-outlined {
     font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }
 </style>
-
 </head>
 
 <body class="font-display bg-background-light dark:bg-background-dark">
 
-<!-- WRAPPER -->
-<div class="flex min-h-screen w-full flex-col">
+<div class="flex min-h-screen">
 
-<div class="flex flex-1">
+    <!-- SIDEBAR -->
+    <iframe src="sidebar.html"
+            class="fixed left-0 top-0 w-64 h-full border-r border-border-light dark:border-border-dark"
+            frameborder="0"></iframe>
 
-<iframe src="sidebar.html" class="fixed left-0 top-0 w-64 h-full border-r" frameborder="0"></iframe>
+    <!-- MAIN -->
+    <main class="flex-1 ml-64 p-8 overflow-y-auto">
+        <div class="max-w-7xl mx-auto">
 
-<!-- MAIN CONTENT -->
-<main class="flex-1 p-8 overflow-y-auto">
-<div class="max-w-7xl mx-auto">
+            <!-- HEADER -->
+            <header class="mb-8">
+                <h1 class="text-3xl font-bold text-text-light-primary dark:text-text-dark-primary">
+                    Trang tổng quan
+                </h1>
+                <p class="text-text-light-secondary dark:text-text-dark-secondary mt-1">
+                    Tình hình kho hàng 7 ngày gần nhất
+                </p>
+            </header>
 
-<!-- HEADER -->
-<header class="mb-8">
-    <h1 class="text-text-light-primary dark:text-text-dark-primary text-3xl font-bold">Trang tổng quan</h1>
-    <p class="text-text-light-secondary dark:text-text-dark-secondary mt-1">
-        Chào mừng trở lại, đây là tình hình kho hàng hôm nay.
-    </p>
-</header>
+            <!-- KPI -->
+            <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
 
-<!-- KPI CARDS -->
-<section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="p-6 rounded-lg bg-card-light dark:bg-card-dark border border-border-light dark:border-border-dark">
+                    <p class="text-sm text-text-light-secondary dark:text-text-dark-secondary">
+                        Tổng sản phẩm
+                    </p>
+                    <p id="total_products"
+                       class="text-3xl font-bold text-text-light-primary dark:text-text-dark-primary">
+                        —
+                    </p>
+                </div>
 
+                <div class="p-6 rounded-lg bg-card-light dark:bg-card-dark border border-border-light dark:border-border-dark">
+                    <p class="text-sm text-text-light-secondary dark:text-text-dark-secondary">
+                        Tổng giá trị kho
+                    </p>
+                    <p id="total_stock_value"
+                       class="text-3xl font-bold text-text-light-primary dark:text-text-dark-primary">
+                        —
+                    </p>
+                </div>
+
+                <div class="p-6 rounded-lg bg-card-light dark:bg-card-dark border border-border-light dark:border-border-dark">
+                    <p class="text-sm text-text-light-secondary dark:text-text-dark-secondary">
+                        Sản phẩm tồn thấp
+                    </p>
+                    <p id="low_stock"
+                       class="text-3xl font-bold text-warning">
+                        —
+                    </p>
+                </div>
+
+                <div class="p-6 rounded-lg bg-card-light dark:bg-card-dark border border-border-light dark:border-border-dark">
+                    <p class="text-sm text-text-light-secondary dark:text-text-dark-secondary">
+                        Tồn kho hiện tại
+                    </p>
+                    <p id="current_inventory"
+                       class="text-3xl font-bold text-inventory">
+                        —
+                    </p>
+                </div>
+
+            </section>
+
+            <!-- CHART -->
+            <section class="p-6 rounded-lg bg-card-light dark:bg-card-dark border border-border-light dark:border-border-dark">
+                <h2 class="text-lg font-semibold text-text-light-primary dark:text-text-dark-primary mb-4">
+                    Biểu đồ nhập – xuất kho (7 ngày)
+                </h2>
+                <canvas id="stockChart" height="120"></canvas>
+            </section>
+            
+            <!-- TOP 5 TABLES -->
+<section class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-10">
+
+    <!-- TOP 5 NHẬP -->
     <div class="p-6 rounded-lg bg-card-light dark:bg-card-dark border border-border-light dark:border-border-dark">
-        <p class="text-text-light-secondary dark:text-text-dark-secondary text-sm">Tổng sản phẩm</p>
-        <p id="total_products" class="text-text-light-primary dark:text-text-dark-primary text-3xl font-bold">0</p>
+        <h3 class="text-lg font-semibold mb-4 text-import">
+            Top 5 nguyên liệu nhập nhiều nhất
+        </h3>
+
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="border-b">
+                    <th class="text-left py-2">Nguyên liệu</th>
+                    <th class="text-right py-2">Số lượng</th>
+                </tr>
+            </thead>
+            <tbody id="topImportTable">
+                <tr>
+                    <td colspan="2" class="text-center py-4 text-text-light-secondary">
+                        Đang tải dữ liệu...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 
+    <!-- TOP 5 XUẤT -->
     <div class="p-6 rounded-lg bg-card-light dark:bg-card-dark border border-border-light dark:border-border-dark">
-        <p class="text-text-light-secondary dark:text-text-dark-secondary text-sm">Tổng giá trị kho</p>
-        <p id="total_stock_value" class="text-text-light-primary dark:text-text-dark-primary text-3xl font-bold">0</p>
-    </div>
+        <h3 class="text-lg font-semibold mb-4 text-export">
+            Top 5 nguyên liệu xuất nhiều nhất
+        </h3>
 
-    <div class="p-6 rounded-lg bg-card-light dark:bg-card-dark border border-border-light dark:border-border-dark">
-        <p class="text-text-light-secondary dark:text-text-dark-secondary text-sm">Tồn kho thấp</p>
-        <p id="low_stock" class="text-warning text-3xl font-bold">0</p>
-    </div>
-
-    <div class="p-6 rounded-lg bg-card-light dark:bg-card-dark border border-border-light dark:border-border-dark">
-        <p class="text-text-light-secondary dark:text-text-dark-secondary text-sm">Sản phẩm sắp hết hạn</p>
-        <p class="text-danger text-3xl font-bold">8</p>
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="border-b">
+                    <th class="text-left py-2">Nguyên liệu</th>
+                    <th class="text-right py-2">Số lượng</th>
+                </tr>
+            </thead>
+            <tbody id="topExportTable">
+                <tr>
+                    <td colspan="2" class="text-center py-4 text-text-light-secondary">
+                        Đang tải dữ liệu...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 
 </section>
-
-</div>
-</main>
-
-</div>
+        </div>
+    </main>
 </div>
 
-<!-- ===========================
-      FETCH API DASHBOARD DATA
-=============================== -->
+<!-- =======================
+     DASHBOARD SCRIPT
+======================= -->
 <script>
-async function loadDashboard() {
-    try {
-        const res = await fetch("http://127.0.0.1:8000/dashboard/summary");
-        if (!res.ok) throw new Error("Lỗi fetch dashboard");
+const API_BASE = "http://127.0.0.1:8000";
+let stockChartInstance = null;
 
+/* ===== KPI ===== */
+async function loadDashboardSummary() {
+    try {
+        const res = await fetch(`${API_BASE}/dashboard/summary`);
         const data = await res.json();
 
-        // Tổng sản phẩm
-        document.getElementById("total_products").innerText =
+        document.getElementById("total_products").textContent =
             data.total_products ?? 0;
 
-        // Tổng giá trị kho
-        document.getElementById("total_stock_value").innerText =
+        document.getElementById("total_stock_value").textContent =
             (data.total_stock_value ?? 0).toLocaleString("vi-VN") + " đ";
 
-        // Tồn kho thấp
-        document.getElementById("low_stock").innerText =
+        document.getElementById("low_stock").textContent =
             data.low_stock ?? 0;
 
-    } catch (err) {
-        console.error("Lỗi tải dữ liệu dashboard:", err);
+    } catch (e) {
+        console.error("Summary error:", e);
     }
 }
 
-loadDashboard();
+/* ===== CHART ===== */
+async function loadStockChart() {
+    try {
+        const res = await fetch(`${API_BASE}/dashboard/stock-chart`);
+        const data = await res.json();
+
+        document.getElementById("current_inventory").textContent =
+            data.current_inventory ?? 0;
+
+        const ctx = document.getElementById("stockChart").getContext("2d");
+
+        if (stockChartInstance) {
+            stockChartInstance.destroy();
+        }
+
+        stockChartInstance = new Chart(ctx, {
+            type: "line",
+            data: {
+                labels: data.labels,
+                datasets: [
+                    {
+                        label: "Nhập kho",
+                        data: data.imports,
+                        borderColor: "#2196F3",
+                        backgroundColor: "rgba(33,150,243,0.15)",
+                        tension: 0.35,
+                        fill: true
+                    },
+                    {
+                        label: "Xuất kho",
+                        data: data.exports,
+                        borderColor: "#FF9800",
+                        backgroundColor: "rgba(255,152,0,0.15)",
+                        tension: 0.35,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: "top" }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { precision: 0 }
+                    }
+                }
+            }
+        });
+
+    } catch (e) {
+        console.error("Chart error:", e);
+    }
+}
+
+async function loadTopImportExport() {
+    try {
+        const [importRes, exportRes] = await Promise.all([
+            fetch(`${API_BASE}/dashboard/top-import-products`),
+            fetch(`${API_BASE}/dashboard/top-export-products`)
+        ]);
+
+        const importData = await importRes.json();
+        const exportData = await exportRes.json();
+
+        // TOP NHẬP
+        const importTable = document.getElementById("topImportTable");
+        importTable.innerHTML = "";
+
+        if (importData.length === 0) {
+            importTable.innerHTML =
+                `<tr><td colspan="2" class="text-center py-4">Không có dữ liệu</td></tr>`;
+        } else {
+            importData.forEach(item => {
+                importTable.innerHTML += `
+                    <tr class="border-b last:border-0">
+                        <td class="py-2">${item.product_name}</td>
+                        <td class="py-2 text-right">${item.quantity}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        // TOP XUẤT
+        const exportTable = document.getElementById("topExportTable");
+        exportTable.innerHTML = "";
+
+        if (exportData.length === 0) {
+            exportTable.innerHTML =
+                `<tr><td colspan="2" class="text-center py-4">Không có dữ liệu</td></tr>`;
+        } else {
+            exportData.forEach(item => {
+                exportTable.innerHTML += `
+                    <tr class="border-b last:border-0">
+                        <td class="py-2">${item.product_name}</td>
+                        <td class="py-2 text-right">${item.quantity}</td>
+                    </tr>
+                `;
+            });
+        }
+
+    } catch (err) {
+        console.error("Top import/export error:", err);
+    }
+}
+
+/* INIT */
+loadDashboardSummary();
+loadStockChart();
+loadTopImportExport();
 </script>
 
 </body>
